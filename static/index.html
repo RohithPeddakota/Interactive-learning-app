@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive AI Learning Lab</title>
+  <!-- Modern Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css">
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/lucide/dist/umd/lucide.min.js"></script>
+
+  <!-- ESM Import Maps for Three.js -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <!-- Background Glow Effects -->
+  <div class="bg-glow bg-glow-primary"></div>
+  <div class="bg-glow bg-glow-secondary"></div>
+
+  <!-- Main Application Wrapper -->
+  <div class="app-container">
+    
+    <!-- Top Navigation Header -->
+    <header class="app-header">
+      <div class="logo">
+        <i data-lucide="orbit" class="logo-icon"></i>
+        <span class="logo-text">AI Learning <span class="accent-text">Lab</span></span>
+      </div>
+      
+      <nav class="module-nav">
+        <button class="nav-btn active" data-module="biology">
+          <i data-lucide="dna"></i>
+          <span>Cell Explorer</span>
+        </button>
+        <button class="nav-btn" data-module="physics">
+          <i data-lucide="globe"></i>
+          <span>Orbit Lab</span>
+        </button>
+        <button class="nav-btn" data-module="chemistry">
+          <i data-lucide="atom"></i>
+          <span>Molecule Builder</span>
+        </button>
+      </nav>
+      
+      <div class="header-actions">
+        <div id="connection-status" class="status-badge status-sandbox">
+          <span class="status-dot"></span>
+          <span class="status-text">Sandbox Mode</span>
+        </div>
+        <button id="settings-btn" class="icon-btn" title="API Settings">
+          <i data-lucide="settings"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace Area -->
+    <main class="workspace">
+      
+      <!-- Left Panel: Lessons & AI Explanations -->
+      <section class="panel side-panel left-panel" id="instruction-panel">
+        <div class="panel-header">
+          <div class="tab-selectors">
+            <button class="tab-btn active" data-tab="learn">
+              <i data-lucide="book-open"></i>
+              <span>Learn</span>
+            </button>
+            <button class="tab-btn" data-tab="activity">
+              <i data-lucide="flask"></i>
+              <span>Activity</span>
+            </button>
+          </div>
+        </div>
+        
+        <div class="panel-content scrollable">
+          <!-- LEARN TAB CONTENT -->
+          <div class="tab-pane active" id="pane-learn">
+            <div id="explain-intro" class="empty-state">
+              <i data-lucide="sparkles" class="pulse-icon"></i>
+              <h3>Interactive 3D Explorer</h3>
+              <p id="module-instruction">Click on any part of the 3D cell model to trigger a deep AI explanation of its structure and function.</p>
+            </div>
+            
+            <div id="explain-content" class="markdown-body hidden">
+              <!-- Dynamically populated -->
+            </div>
+            
+            <div id="explain-loading" class="loading-spinner hidden">
+              <div class="spinner"></div>
+              <p>Analyzing model structure & generating AI explanation...</p>
+            </div>
+          </div>
+          
+          <!-- ACTIVITY TAB CONTENT -->
+          <div class="tab-pane" id="pane-activity">
+            <!-- Biology Activity (Cell Builder) -->
+            <div class="activity-container" id="activity-biology">
+              <h3>Cell Builder Challenge</h3>
+              <p class="activity-desc">Drag or click organelles from the biological inventory below to assemble them into their correct highlighted cytoplasm slots inside the 3D cell.</p>
+              
+              <div class="inventory-grid" id="bio-inventory">
+                <!-- Dynamically populated organelles list -->
+              </div>
+              
+              <div class="activity-actions">
+                <button id="btn-reset-bio" class="btn btn-secondary">
+                  <i data-lucide="refresh-cw"></i> Reset Build
+                </button>
+                <button id="btn-verify-bio" class="btn btn-primary">
+                  <i data-lucide="check-circle"></i> Verify Assembly
+                </button>
+              </div>
+            </div>
+
+            <!-- Physics Activity (Orbit Lab Sliders) -->
+            <div class="activity-container hidden" id="activity-physics">
+              <h3>Orbit Insertion Lab</h3>
+              <p class="activity-desc">Adjust variables to place the spacecraft in a stable orbit. Avoid burning in the star or escaping the system!</p>
+              
+              <div class="control-groups">
+                <div class="slider-group">
+                  <div class="slider-label">
+                    <span>Star Mass ($M$)</span>
+                    <span id="val-mass">100</span>
+                  </div>
+                  <input type="range" id="slider-mass" min="10" max="300" value="100">
+                </div>
+                
+                <div class="slider-group">
+                  <div class="slider-label">
+                    <span>Orbital Speed ($v_0$)</span>
+                    <span id="val-speed">2.0</span>
+                  </div>
+                  <input type="range" id="slider-speed" min="0" max="6" step="0.1" value="2.0">
+                </div>
+                
+                <div class="slider-group">
+                  <div class="slider-label">
+                    <span>Orbital Radius ($r_0$)</span>
+                    <span id="val-radius">10</span>
+                  </div>
+                  <input type="range" id="slider-radius" min="4" max="22" step="0.5" value="10">
+                </div>
+              </div>
+
+              <div class="simulation-metrics">
+                <div class="metric-box">
+                  <span class="metric-label">Orbital State</span>
+                  <span id="metric-state" class="metric-value stable-text">Stabilizing...</span>
+                </div>
+                <div class="metric-box">
+                  <span class="metric-label">Current Velocity</span>
+                  <span id="metric-velocity" class="metric-value">2.0 units</span>
+                </div>
+              </div>
+
+              <div class="activity-actions">
+                <button id="btn-play-sim" class="btn btn-primary">
+                  <i data-lucide="play"></i> Pause
+                </button>
+                <button id="btn-reset-sim" class="btn btn-secondary">
+                  <i data-lucide="refresh-cw"></i> Reset
+                </button>
+                <button id="btn-analyze-orbit" class="btn btn-accent">
+                  <i data-lucide="brain"></i> AI Orbit Analysis
+                </button>
+              </div>
+            </div>
+
+            <!-- Chemistry Activity (Molecule Sandbox) -->
+            <div class="activity-container hidden" id="activity-chemistry">
+              <h3>Synthesis Lab</h3>
+              <p class="activity-desc">Construct chemical compounds by placing atoms onto the canvas and creating covalent bonds between them.</p>
+              
+              <div class="atom-selector-tray">
+                <button class="atom-btn add-atom-btn" data-element="H">
+                  <span class="atom-color-dot H-dot"></span>
+                  <span>Hydrogen (H)</span>
+                </button>
+                <button class="atom-btn add-atom-btn" data-element="C">
+                  <span class="atom-color-dot C-dot"></span>
+                  <span>Carbon (C)</span>
+                </button>
+                <button class="atom-btn add-atom-btn" data-element="O">
+                  <span class="atom-color-dot O-dot"></span>
+                  <span>Oxygen (O)</span>
+                </button>
+                <button class="atom-btn add-atom-btn" data-element="N">
+                  <span class="atom-color-dot N-dot"></span>
+                  <span>Nitrogen (N)</span>
+                </button>
+              </div>
+
+              <div class="sandbox-instructions">
+                <p><i data-lucide="info" class="inline-icon"></i> <strong>How to Bond:</strong> Select an atom, then select another atom. Click "Form Bond" to connect them. Electrons will automatically share!</p>
+              </div>
+
+              <div class="activity-actions">
+                <button id="btn-form-bond" class="btn btn-primary" disabled>
+                  <i data-lucide="git-commit"></i> Form Bond
+                </button>
+                <button id="btn-delete-atom" class="btn btn-danger" disabled>
+                  <i data-lucide="trash-2"></i> Delete Atom
+                </button>
+                <button id="btn-clear-chem" class="btn btn-secondary">
+                  <i data-lucide="eraser"></i> Clear Sandbox
+                </button>
+                <button id="btn-analyze-chem" class="btn btn-accent">
+                  <i data-lucide="sparkles"></i> Analyze Molecule
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Center Panel: 3D WebGL Viewport -->
+      <section class="panel viewport-panel">
+        <!-- Canvas Container -->
+        <div id="canvas-container">
+          <!-- 3D Canvas will be dynamically injected here -->
+        </div>
+
+        <!-- 3D Overlay Instructions & Tools -->
+        <div class="viewport-overlay top-left">
+          <span class="helper-text" id="viewport-helper">
+            <i data-lucide="mouse-pointer-click"></i>
+            <span>Drag to rotate | Scroll to zoom | Click object to inspect</span>
+          </span>
+        </div>
+
+        <div class="viewport-overlay bottom-right">
+          <button id="btn-recenter-cam" class="icon-btn outline-btn" title="Recenter Camera">
+            <i data-lucide="eye"></i>
+          </button>
+        </div>
+
+        <!-- Challenge Banner -->
+        <div id="challenge-banner" class="viewport-overlay top-center hidden">
+          <div class="banner-content">
+            <i data-lucide="target" class="banner-icon"></i>
+            <span id="challenge-text">Active Challenge: Perfect Circle Orbit</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Panel: Quizzes & Feedback -->
+      <section class="panel side-panel right-panel" id="quiz-panel">
+        <div class="panel-header">
+          <div class="header-title">
+            <i data-lucide="graduation-cap"></i>
+            <h3>Interactive Quiz</h3>
+          </div>
+          <div class="quiz-score-badge">
+            <span id="quiz-score">0</span>/<span id="quiz-total">0</span>
+          </div>
+        </div>
+
+        <div class="panel-content scrollable">
+          <!-- QUIZ CONTAINER -->
+          <div id="quiz-setup-state" class="empty-state">
+            <i data-lucide="help-circle" class="pulse-icon accent-glow"></i>
+            <h3>Ready to test your knowledge?</h3>
+            <p>Take a quick quiz designed specifically for this module. Your performance will unlock special AI learning achievements!</p>
+            <button id="btn-start-quiz" class="btn btn-primary">
+              <i data-lucide="play-circle"></i> Start Quiz
+            </button>
+          </div>
+
+          <div id="quiz-active-state" class="quiz-container hidden">
+            <!-- Question Card -->
+            <div class="quiz-progress">
+              <div class="progress-bar-track">
+                <div class="progress-bar-fill" id="quiz-progress-bar" style="width: 0%"></div>
+              </div>
+              <span class="progress-label" id="quiz-progress-text">Question 1 of 5</span>
+            </div>
+
+            <h4 class="question-text" id="question-text">Loading question...</h4>
+
+            <div class="quiz-options" id="quiz-options-container">
+              <!-- Dynamically populated options -->
+            </div>
+
+            <div id="quiz-feedback" class="quiz-feedback-box hidden">
+              <div class="feedback-header">
+                <i id="feedback-icon" data-lucide="check-circle-2"></i>
+                <h5 id="feedback-title">Correct!</h5>
+              </div>
+              <p id="feedback-desc">Mitochondria possess double membranes which contain cristae where metabolic reactions take place.</p>
+            </div>
+
+            <div class="quiz-actions">
+              <button id="btn-submit-answer" class="btn btn-primary" disabled>
+                Submit Answer
+              </button>
+              <button id="btn-next-question" class="btn btn-primary hidden">
+                Next Question <i data-lucide="arrow-right"></i>
+              </button>
+            </div>
+          </div>
+
+          <div id="quiz-finished-state" class="empty-state hidden">
+            <i data-lucide="award" class="pulse-icon gold-glow"></i>
+            <h3>Quiz Completed!</h3>
+            <p id="quiz-congrats">Fantastic job! You've mastered the basics of Cell Biology.</p>
+            <div class="score-summary">
+              <span class="summary-label">Final Score:</span>
+              <span class="summary-val" id="quiz-final-score">4/5</span>
+            </div>
+            <button id="btn-retry-quiz" class="btn btn-secondary">
+              <i data-lucide="refresh-cw"></i> Try Again
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Settings Modal (API Keys) -->
+  <div class="modal-overlay hidden" id="settings-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>API settings</h3>
+        <button id="btn-close-settings" class="close-btn"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-content">
+        <p>To enable real-time Gemini AI explanations and analysis, provide your Google Gemini API key below. Otherwise, the app operates in <strong>Offline Sandbox Mode</strong> with high-quality preloaded explanations.</p>
+        
+        <div class="form-group">
+          <label for="input-api-key">Gemini API Key</label>
+          <input type="password" id="input-api-key" placeholder="AIzaSy..." autocomplete="off">
+          <span class="input-helper">Your API key is saved locally in your browser's local storage and is never uploaded.</span>
+        </div>
+
+        <div class="status-summary">
+          <div class="status-row">
+            <span>Current Mode:</span>
+            <span id="modal-mode-badge" class="badge-tag tag-sandbox">Sandbox (Offline)</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button id="btn-clear-settings" class="btn btn-secondary">Clear Key</button>
+        <button id="btn-save-settings" class="btn btn-primary">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Controller Scripts -->
+  <script type="module" src="js/app.js"></script>
+  
+  <script>
+    // Initialize Lucide icons on page load
+    document.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
